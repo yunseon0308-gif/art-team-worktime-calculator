@@ -69,20 +69,6 @@ align-items: start;
       box-shadow: var(--shadow);
       padding: 18px;
     }
-    .grid {
-      display: grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 12px;
-    }
-    .full {
-      grid-column: 1 / -1;
-    }
-    label {
-      display: grid;
-      gap: 6px;
-      font-size: 13px;
-      font-weight: 700;
-    }
     input,
     select {
       width: 100%;
@@ -109,42 +95,6 @@ align-items: start;
       border-top: 1px solid var(--line);
     }
     section > .phase:first-child { margin-top: 0; padding-top: 0; border-top: 0; }
-    .pre-grid {
-      display: grid;
-      grid-template-columns: 0.45fr repeat(3, 1fr);
-      gap: 0;
-      border: 1px solid var(--line);
-      border-radius: 8px;
-      overflow: hidden;
-    }
-    .pre-corner,
-    .field-title,
-    .row-title {
-      display: grid;
-      place-items: center;
-      color: var(--muted);
-      font-size: 12px;
-      font-weight: 800;
-      text-align: center;
-      background: #f8faf8;
-      border-right: 1px solid var(--line);
-      border-bottom: 1px solid var(--line);
-      min-height: 44px;
-    }
-    .row-title {
-      color: var(--ink);
-    }
-    .pre-grid label {
-      padding: 10px;
-      border-right: 1px solid var(--line);
-      border-bottom: 1px solid var(--line);
-    }
-    .pre-grid > :nth-child(4n) {
-      border-right: 0;
-    }
-    .pre-grid > :nth-last-child(-n + 4) {
-      border-bottom: 0;
-    }
     .input-table { min-width: 0; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; }
     .input-table :is(th, td) { text-align: left !important; white-space: normal !important; vertical-align: middle; }
     .input-table th { background: #f8faf8; }
@@ -212,6 +162,18 @@ text-align: left !important;
 .subtotal { background: #f3f7f5; }
 .grand-total { background: #e8f1ee; }
 .result-head { display: flex; align-items: start; justify-content: space-between; gap: 18px; }
+.tabs { display: flex; gap: 6px; margin-bottom: 10px; }
+.tab-btn { border: 1px solid var(--line); border-radius: 6px; background: #fffdfa; padding: 7px 12px; font: inherit; font-weight: 800; color: var(--muted); cursor: pointer; }
+.tab-btn.is-active { border-color: var(--accent); background: var(--accent-soft); color: var(--accent); }
+.tab-panel.is-hidden { display: none; }
+.formula {
+  border-top: 1px solid var(--line);
+  padding-top: 12px;
+  color: var(--muted);
+  font-size: 13px;
+}
+.formula strong { color: var(--ink); }
+.formula code { color: var(--warn); font-family: inherit; font-weight: 800; }
 .result {
       display: flex;
       justify-content: space-between;
@@ -254,10 +216,7 @@ text-align: left !important;
         padding-top: 18px;
       }
       .layout,
-      .grid {
-        grid-template-columns: 1fr;
-      }
-      .pre-grid {
+      .tabs {
         grid-template-columns: 1fr;
       }
       .result-head { display: block; }
@@ -304,24 +263,41 @@ text-align: left !important;
             </tbody>
           </table>
         </div>
+        <div class="phase">
+          <h2>가산수당 계산</h2>
+          <table class="input-table" aria-label="가산수당 입력">
+            <colgroup><col style="width:18%"><col style="width:27%"><col style="width:27%"><col style="width:28%"></colgroup>
+            <thead><tr><th>구분</th><th>기본</th><th>야간</th><th>휴일</th></tr></thead>
+            <tbody>
+              <tr><td>기준</td><td><div class="with-unit"><span>일</span><input id="baseHours" type="number" value="8" min="0" step="0.5"><span class="unit">시간 초과 연장</span></div></td><td>22:00-06:00</td><td>8시간 초과 2.0배</td></tr>
+              <tr><td>프리 공통</td><td>연장 자동계산</td><td><div class="with-unit"><span>일</span><input id="preNightHours" type="number" value="0" min="0" step="0.5"><span class="unit">시간</span></div></td><td><div class="with-unit"><span>주</span><input id="preHolidayDays" type="number" value="0" min="0" step="0.5"><span class="unit">일</span></div></td></tr>
+              <tr><td>촬영회차</td><td>촬영+세팅·바라시</td><td><div class="with-unit"><span>회차</span><input id="shootNightHours" type="number" value="0" min="0" step="0.5"><span class="unit">시간</span></div></td><td><div class="with-unit"><span>주</span><input id="shootHolidayDays" type="number" value="0" min="0" step="0.5"><span class="unit">회차</span></div></td></tr>
+              <tr><td>비촬영</td><td>연장 자동계산</td><td><div class="with-unit"><span>일</span><input id="deskNightHours" type="number" value="0" min="0" step="0.5"><span class="unit">시간</span></div></td><td><div class="with-unit"><span>주</span><input id="deskHolidayDays" type="number" value="0" min="0" step="0.5"><span class="unit">일</span></div></td></tr>
+            </tbody>
+          </table>
+        </div>
       </section>
       <aside aria-label="결과">
         <div class="result-head">
           <h2>계산 결과</h2>
           <p class="warn" id="note"></p>
         </div>
-        <div class="results" aria-live="polite">
+        <div class="tabs" role="tablist" aria-label="결과 보기">
+          <button class="tab-btn is-active" type="button" data-tab="resultPanel">계산 결과</button>
+          <button class="tab-btn" type="button" data-tab="formulaPanel">산출근거</button>
+        </div>
+        <div class="results tab-panel" id="resultPanel" aria-live="polite">
           <table>
-            <thead><tr><th>구간</th><th>기간</th><th>근무 기준</th><th>촬영/근무</th><th>월 환산</th><th>월근로</th><th>주근로</th><th>총시간</th><th>법정시간</th><th>계약시간</th></tr></thead>
+            <thead><tr><th>구간</th><th>기간</th><th>근무 기준</th><th>촬영/근무</th><th>월 환산</th><th>월근로</th><th>주근로</th><th>총시간</th><th>가산반영</th><th>법정시간</th><th>계약시간</th></tr></thead>
             <tbody>
-              <tr><td>프리 초중반</td><td id="prePeriodA">0개월</td><td id="preWorkA">주 0일</td><td id="preDayA">0시간</td><td id="preMonthFactorA">0주</td><td id="preMonthlyA" class="boxed-month">0시간</td><td id="preWeeklyA">0시간</td><td><strong id="preTotalA">0시간</strong></td><td id="preCompareA">-</td><td id="preContractA">-</td></tr>
-              <tr><td>프리 후반</td><td id="prePeriodB">0개월</td><td id="preWorkB">주 0일</td><td id="preDayB">0시간</td><td id="preMonthFactorB">0주</td><td id="preMonthlyB" class="boxed-month">0시간</td><td id="preWeeklyB">0시간</td><td><strong id="preTotalB">0시간</strong></td><td id="preCompareB">-</td><td id="preContractB">-</td></tr>
-              <tr class="subtotal"><td>프리 전체</td><td id="prePeriodTotal">0개월</td><td class="calc">초중반 + 후반</td><td class="calc">-</td><td class="calc">-</td><td id="preMonthlyTotal" class="boxed-month">0시간</td><td id="preWeeklyTotal">0시간</td><td><strong id="preTotal">0시간</strong></td><td id="preCompareTotal">-</td><td id="preContractTotal">-</td></tr>
-              <tr><td>프로덕션(촬영)</td><td id="prodPeriod">0개월</td><td id="prodWork" rowspan="2" class="work-merged">주 0회차<br><span class="work-sub">(월 0회차)</span></td><td id="prodShoot">0시간</td><td class="calc">-</td><td id="prodShootMonthly">0시간</td><td id="prodShootWeekly">0시간</td><td><strong id="prodShootTotal">0시간</strong></td><td id="prodShootCompare">-</td><td class="calc">-</td></tr>
-              <tr><td>세팅·바라시</td><td id="prepPeriod">0개월</td><td id="prepDay">0시간</td><td class="calc">-</td><td id="prepMonthly">0시간</td><td id="prepWeekly">0시간</td><td><strong id="prepTotal">0시간</strong></td><td id="prepCompare">-</td><td class="calc">-</td></tr>
-              <tr><td>비촬영 근무</td><td id="deskPeriod">0개월</td><td id="deskWork">주 0일</td><td id="deskDay">0시간</td><td id="deskMonthFactor">0주</td><td id="deskMonthly">0시간</td><td id="deskWeekly">0시간</td><td><strong id="deskTotal">0시간</strong></td><td id="deskCompare">-</td><td class="calc">-</td></tr>
-              <tr class="subtotal"><td>프로덕션 전체</td><td id="prodTotalPeriod">0개월</td><td class="compact">촬영 + 세팅·바라시<br>+ 비촬영</td><td id="prodDay" class="compact">0h</td><td class="calc">-</td><td id="prodMonthly" class="boxed-month">0시간</td><td id="prodWeekly">0시간</td><td><strong id="prodTotal">0시간</strong></td><td id="prodCompare">-</td><td id="prodContract">-</td></tr>
-              <tr class="grand-total"><td>전체 총시간</td><td id="grandPeriod">0개월</td><td class="calc">프리 + 프로덕션</td><td class="calc">-</td><td class="calc">-</td><td id="monthlyAverage" class="boxed-month">0시간</td><td id="weeklyAverage">0시간</td><td><strong id="grandTotal">0시간</strong></td><td id="grandCompare">-</td><td id="grandContract">-</td></tr>
+              <tr><td>프리 초중반</td><td id="prePeriodA">0개월</td><td id="preWorkA">주 0일</td><td id="preDayA">0시간</td><td id="preMonthFactorA">0주</td><td id="preMonthlyA" class="boxed-month">0시간</td><td id="preWeeklyA">0시간</td><td><strong id="preTotalA">0</strong></td><td id="prePaidA">0</td><td id="preCompareA">-</td><td id="preContractA">-</td></tr>
+              <tr><td>프리 후반</td><td id="prePeriodB">0개월</td><td id="preWorkB">주 0일</td><td id="preDayB">0시간</td><td id="preMonthFactorB">0주</td><td id="preMonthlyB" class="boxed-month">0시간</td><td id="preWeeklyB">0시간</td><td><strong id="preTotalB">0</strong></td><td id="prePaidB">0</td><td id="preCompareB">-</td><td id="preContractB">-</td></tr>
+              <tr class="subtotal"><td>프리 전체</td><td id="prePeriodTotal">0개월</td><td class="calc">초중반 + 후반</td><td class="calc">-</td><td class="calc">-</td><td id="preMonthlyTotal" class="boxed-month">0시간</td><td id="preWeeklyTotal">0시간</td><td><strong id="preTotal">0</strong></td><td id="prePaidTotal">0</td><td id="preCompareTotal">-</td><td id="preContractTotal">-</td></tr>
+              <tr><td>프로덕션(촬영)</td><td id="prodPeriod">0개월</td><td id="prodWork" rowspan="2" class="work-merged">주 0회차<br><span class="work-sub">(월 0회차)</span></td><td id="prodShoot">0시간</td><td class="calc">-</td><td id="prodShootMonthly">0시간</td><td id="prodShootWeekly">0시간</td><td><strong id="prodShootTotal">0</strong></td><td class="calc">묶음계산</td><td id="prodShootCompare">-</td><td class="calc">-</td></tr>
+              <tr><td>세팅·바라시</td><td id="prepPeriod">0개월</td><td id="prepDay">0시간</td><td class="calc">-</td><td id="prepMonthly">0시간</td><td id="prepWeekly">0시간</td><td><strong id="prepTotal">0</strong></td><td class="calc">묶음계산</td><td id="prepCompare">-</td><td class="calc">-</td></tr>
+              <tr><td>비촬영 근무</td><td id="deskPeriod">0개월</td><td id="deskWork">주 0일</td><td id="deskDay">0시간</td><td id="deskMonthFactor">0주</td><td id="deskMonthly">0시간</td><td id="deskWeekly">0시간</td><td><strong id="deskTotal">0</strong></td><td id="deskPaid">0</td><td id="deskCompare">-</td><td class="calc">-</td></tr>
+              <tr class="subtotal"><td>프로덕션 전체</td><td id="prodTotalPeriod">0개월</td><td class="compact">촬영 + 세팅·바라시<br>+ 비촬영</td><td id="prodDay" class="compact">0h</td><td class="calc">-</td><td id="prodMonthly" class="boxed-month">0시간</td><td id="prodWeekly">0시간</td><td><strong id="prodTotal">0</strong></td><td id="prodPaid">0</td><td id="prodCompare">-</td><td id="prodContract">-</td></tr>
+              <tr class="grand-total"><td>전체 총시간</td><td id="grandPeriod">0개월</td><td class="calc">프리 + 프로덕션</td><td class="calc">-</td><td class="calc">-</td><td id="monthlyAverage" class="boxed-month">0시간</td><td id="weeklyAverage">0시간</td><td><strong id="grandTotal">0</strong></td><td id="grandPaid">0</td><td id="grandCompare">-</td><td id="grandContract">-</td></tr>
             </tbody>
           </table>
           <div class="result">
@@ -333,9 +309,20 @@ text-align: left !important;
             <strong id="averageWage">0원</strong>
           </div>
           <div class="result">
-            <span>시급 차이</span>
+            <span>가산반영시간 기준 시급</span>
+            <strong id="paidWage">0원</strong>
+          </div>
+          <div class="result">
+            <span>실질-계약 시급 차이</span>
             <strong id="wageDiff">0원</strong>
           </div>
+        </div>
+        <div class="tab-panel is-hidden formula" id="formulaPanel">
+          <p><strong>실제근로시간</strong> = 근무일/회차 수 x 입력한 일일 또는 회차당 시간입니다.</p>
+          <p><strong>가산반영시간</strong> = 실제시간 + 연장가산 + 야간가산 + 휴일가산입니다.</p>
+          <p><code>평일</code> 실제시간 + max(실제시간 - 기본시간, 0) x 0.5 + 야간시간 x 0.5</p>
+          <p><code>휴일</code> 실제시간 + min(실제시간, 8) x 0.5 + max(실제시간 - 8, 0) x 1.0 + 야간시간 x 0.5</p>
+          <p id="formulaSummary"></p>
         </div>
       </aside>
     </div>
@@ -345,7 +332,9 @@ text-align: left !important;
       "salary", "contractHours", "weeksPerMonth",
       "preMonthsA", "preDaysA", "preHoursA",
       "preMonthsB", "preDaysB", "preHoursB",
-      "prodMonths", "weeklyWorkDays", "shootDays", "shootHours", "prepHours", "deskHours"
+      "prodMonths", "weeklyWorkDays", "shootDays", "shootHours", "prepHours", "deskHours",
+      "baseHours", "preNightHours", "shootNightHours", "deskNightHours",
+      "preHolidayDays", "shootHolidayDays", "deskHolidayDays"
     ];
     const won = new Intl.NumberFormat("ko-KR", {
       style: "currency",
@@ -365,6 +354,19 @@ text-align: left !important;
       document.getElementById(id).textContent = value;
     }
     function divide(a, b) { return b > 0 ? a / b : 0; }
+    function clamp(value, max) { return Math.max(Math.min(value, max), 0); }
+    function paidDay(actual, night, holiday) {
+      const base = number("baseHours");
+      const nightHours = clamp(night, actual);
+      if (holiday) {
+        return actual + Math.min(actual, 8) * 0.5 + Math.max(actual - 8, 0) + nightHours * 0.5;
+      }
+      return actual + Math.max(actual - base, 0) * 0.5 + nightHours * 0.5;
+    }
+    function paidWeek(days, hours, night, holidayDays) {
+      const holidays = clamp(holidayDays, days);
+      return (days - holidays) * paidDay(hours, night, false) + holidays * paidDay(hours, night, true);
+    }
     function calculate() {
       const salary = number("salary") * 10000;
       const contractHours = number("contractHours");
@@ -380,14 +382,31 @@ text-align: left !important;
       const prodHoursPerDay = number("shootHours") + number("prepHours");
       const prodTotal = prodShootTotal + prepTotal + deskTotal;
       const grandTotal = preTotal + prodTotal;
+      const prePaidA = number("preMonthsA") * weeksPerMonth * paidWeek(number("preDaysA"), number("preHoursA"), number("preNightHours"), number("preHolidayDays"));
+      const prePaidB = number("preMonthsB") * weeksPerMonth * paidWeek(number("preDaysB"), number("preHoursB"), number("preNightHours"), number("preHolidayDays"));
+      const prePaidTotal = prePaidA + prePaidB;
+      const shootHolidayDays = clamp(number("shootHolidayDays"), weeklyShootDays);
+      const deskHolidayDays = clamp(number("deskHolidayDays"), deskDays);
+      const shootPaidWeek = (weeklyShootDays - shootHolidayDays) * paidDay(prodHoursPerDay, number("shootNightHours"), false) + shootHolidayDays * paidDay(prodHoursPerDay, number("shootNightHours"), true);
+      const deskPaidWeek = paidWeek(deskDays, number("deskHours"), number("deskNightHours"), deskHolidayDays);
+      const deskPaid = number("prodMonths") * weeksPerMonth * deskPaidWeek;
+      const prodPaid = number("prodMonths") * weeksPerMonth * (shootPaidWeek + deskPaidWeek);
+      const grandPaid = prePaidTotal + prodPaid;
       const totalMonths = number("preMonthsA") + number("preMonthsB") + number("prodMonths");
       const monthlyAverage = divide(grandTotal, totalMonths);
       const contractWage = divide(salary, contractHours);
       const averageWage = divide(salary, monthlyAverage);
+      const paidWage = divide(salary, divide(grandPaid, totalMonths));
       const wageDiff = averageWage - contractWage;
       const weekly = (value) => num(divide(value, weeksPerMonth));
       const setAvg = (m, w, value) => { setText(m, num(value)); setText(w, weekly(value)); };
       const setCompare = (id, value, months, base = 52 * weeksPerMonth) => {
+        if (months <= 0 || base <= 0) {
+          const empty = document.getElementById(id);
+          empty.textContent = "-";
+          empty.className = "calc";
+          return;
+        }
         const diff = value - (base * months);
         const el = document.getElementById(id);
         const rounded = Math.round(diff);
@@ -399,6 +418,12 @@ text-align: left !important;
       setText("preTotal", num(preTotal));
       setText("prodTotal", num(prodTotal));
       setText("grandTotal", num(grandTotal));
+      setText("prePaidA", num(prePaidA));
+      setText("prePaidB", num(prePaidB));
+      setText("prePaidTotal", num(prePaidTotal));
+      setText("deskPaid", num(deskPaid));
+      setText("prodPaid", num(prodPaid));
+      setText("grandPaid", num(grandPaid));
       setAvg("monthlyAverage", "weeklyAverage", monthlyAverage);
       setCompare("grandCompare", grandTotal, totalMonths); setCompare("grandContract", grandTotal, totalMonths, contractHours);
       setText("prePeriodA", `${number("preMonthsA")}개월`);
@@ -441,14 +466,23 @@ text-align: left !important;
       setText("grandPeriod", `${totalMonths}개월`);
       setText("contractWage", won.format(contractWage));
       setText("averageWage", won.format(averageWage));
+      setText("paidWage", won.format(paidWage));
       setText("wageDiff", `${wageDiff >= 0 ? "+" : "-"}${won.format(Math.abs(wageDiff))}`);
       const base52Month = 52 * weeksPerMonth;
-      const note = `법정근로시간 : 월${num(base52Month)}시간 / 계약시간 : 월${num(contractHours)}시간, 표의 +/-는 기준 대비 전체기간 반영.`;
+      const contractLabel = contractHours > 0 ? `월${num(contractHours)}시간` : "미입력";
+      const note = `월근로는 실제시간 / 가산반영은 수당계산용 시간. 법정근로시간 : 월${num(base52Month)}시간 / 계약시간 : ${contractLabel}.`;
       setText("note", note);
+      setText("formulaSummary", `현재 입력값 기준 전체 실제시간은 ${num(grandTotal)}시간, 가산반영시간은 ${num(grandPaid)}시간입니다.`);
     }
     ids.forEach((id) => {
       document.getElementById(id).addEventListener("input", calculate);
       document.getElementById(id).addEventListener("change", calculate);
+    });
+    document.querySelectorAll(".tab-btn").forEach((button) => {
+      button.addEventListener("click", () => {
+        document.querySelectorAll(".tab-btn").forEach((b) => b.classList.toggle("is-active", b === button));
+        document.querySelectorAll(".tab-panel").forEach((panel) => panel.classList.toggle("is-hidden", panel.id !== button.dataset.tab));
+      });
     });
     calculate();
   </script>
